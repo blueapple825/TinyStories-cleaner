@@ -2,6 +2,7 @@ import random
 import json
 import glob
 import pickle
+import re
 from collections import Counter
 
 # this freezes my computer. let's load 1 at a time instead
@@ -27,14 +28,12 @@ def process_story(par):
 	# in the future, we might try replacing 160 and 180. nah, it doesn't matter. we're only throwing out 1282 paragraphs
 	# there's some grammar mistakes, like missing commas, and ?". which is double punctuation
 	# "\ ", a space after a \
-	for c in par:
-		if ord(c) != 10 and (ord(c) > 127 or ord(c) < 32):
-			thrown_out += 1
-			# print("offending char:", ord(c), c)
-			return ""
+	if (not "\x0A" in par) and re.search(r'[^\x20-\x7E]', par):
+		thrown_out += 1
+		return ""
 
-	for c in par:
-		if c == '|' or c == '<' or c == '/' or c == '`' or c == '*' or c == '=' or c == '_' or c == '&' or c == '@' or c == '~' or c == '#' or c == '%' or c == '[' or c == ']' or c == '+' or c == '(' or c == ')':
+	for c in ['|', '<', '/', '`', '*', '=', '_', '&', '@', '~', '#', '%', '[', ']', '+', '(', ')']:
+		if c in par:
 			# ` is usually as strange punctuation, or `` ''
 			# / is for Tom/Lily stories, "he/she"
 			# * is usually in *emphasis*, but often incorrect, or in *** separating parts of a story
@@ -49,7 +48,6 @@ def process_story(par):
 			# + is for addition, abbreviation, and A+. but has some mistakes
 			# ( ) is about 80% correctly used
 			thrown_out += 1
-			# print("offending char:", ord(c), c, ":", par) #<i>, <End of Story>, <|im_start|>
 			return ""
 
 	if len(par) < 100:
